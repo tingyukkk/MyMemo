@@ -240,7 +240,7 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>My Memo</h1>
+            <h1>My Memo 随手记录</h1>
             <p class="tagline">快速分享你的想法，随时记录灵感</p>
             <p class="sub-tagline">无需登录，立即发布</p>
         </header>
@@ -256,7 +256,47 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // 修改 displayTexts 函数，移除删除按钮
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, -50%) scale(1)';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -50%) scale(0.9)';
+            }, 2000);
+        }
+
+        // 发布文本
+        function publishText() {
+            const textInput = document.getElementById('textInput');
+            const content = textInput.value.trim();
+            
+            if (!content) {
+                showToast('请输入要分享的内容！');
+                return;
+            }
+
+            const id = Date.now().toString(36);
+            const textData = {
+                id: id,
+                content: content,
+                date: new Date().toLocaleString(),
+                likes: 0
+            };
+
+            let texts = JSON.parse(localStorage.getItem('texts') || '[]');
+            texts.unshift(textData);
+            localStorage.setItem('texts', JSON.stringify(texts));
+
+            textInput.value = '';
+            showToast('✨ 发布成功！');
+            displayTexts();
+        }
+
+        // 显示文本列表
         function displayTexts() {
             const texts = JSON.parse(localStorage.getItem('texts') || '[]');
             const textsList = document.getElementById('textsList');
@@ -281,7 +321,36 @@
             `).join('');
         }
 
-        // 保持其他 JavaScript 函数不变
+        // 点赞功能
+        function likeText(id) {
+            let texts = JSON.parse(localStorage.getItem('texts') || '[]');
+            const index = texts.findIndex(t => t.id === id);
+            if (index !== -1) {
+                texts[index].likes = (texts[index].likes || 0) + 1;
+                localStorage.setItem('texts', JSON.stringify(texts));
+                displayTexts();
+                showToast('❤️ 点赞成功！');
+            }
+        }
+
+        // 分享功能
+        function copyShareLink(id) {
+            const shareUrl = `${window.location.href.split('#')[0]}#${id}`;
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = shareUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            showToast('✨ 链接已复制到剪贴板');
+        }
+
+        // 页面加载时显示已有文本
+        window.onload = function() {
+            displayTexts();
+        }
     </script>
 </body>
 </html>
